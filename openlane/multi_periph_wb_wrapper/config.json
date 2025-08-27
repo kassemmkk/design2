@@ -1,0 +1,25 @@
+{
+    "DESIGN_NAME": "multi_periph_wb_wrapper",
+    "FP_PDN_MULTILAYER": false,
+    "CLOCK_PORT": "wb_clk_i",
+    "CLOCK_PERIOD": 25,
+    "VERILOG_FILES": [
+        "dir::../../verilog/rtl/multi_periph_wb_wrapper.v",
+        "dir::../../verilog/rtl/multi_periph_top.v",
+        "dir::../../verilog/rtl/gpio_edge_detect.v",
+        "dir::../../verilog/rtl/CF_SPI_WB.v",
+        "dir::../../verilog/rtl/CF_SPI.v",
+        "dir::../../verilog/rtl/spi_master.v",
+        "dir::../../verilog/rtl/EF_I2C_WB.v",
+        "dir::../../verilog/rtl/i2c_master_wbs_16.v",
+        "dir::../../verilog/rtl/i2c_master_wbs_8.v",
+        "dir::../../verilog/rtl/i2c_master_axil.v",
+        "dir::../../verilog/rtl/i2c_master.v",
+        "dir::../../verilog/rtl/axis_fifo.v",
+        "dir::../../verilog/rtl/cf_util_lib.v"
+    ],
+    "FP_CORE_UTIL": 40,
+    "VERILOG_DEFINES": [
+        "CLKG_SKY130_HD"
+    ]
+}
