@@ -83,10 +83,8 @@ module user_project_wrapper #(
 /*--------------------------------------*/
 
 multi_periph_wb_wrapper mprj (
-`ifdef USE_POWER_PINS
 	.VPWR(vccd1),	// User area 1 1.8V power
 	.VGND(vssd1),	// User area 1 digital ground
-`endif
 
     .wb_clk_i(wb_clk_i),
     .wb_rst_i(wb_rst_i),
