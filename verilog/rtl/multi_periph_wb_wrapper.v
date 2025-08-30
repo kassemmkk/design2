@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 `default_nettype none
 
 module multi_periph_wb_wrapper (
@@ -45,15 +44,23 @@ module multi_periph_wb_wrapper (
     // GPIO interface
     input  wire [1:0]  gpio_in,
     output wire [1:0]  gpio_out,
-    output wire [1:0]  gpio_oe
+    output wire [1:0]  gpio_oe,
+    
+    // Language Translator external interface
+    output wire [7:0]  trans_ext_data_out,
+    input  wire [7:0]  trans_ext_data_in,
+    output wire        trans_ext_valid_out,
+    input  wire        trans_ext_valid_in,
+    output wire        trans_ext_ready_out,
+    input  wire        trans_ext_ready_in
 );
 
-    wire spi0_irq, spi1_irq, i2c_irq, gpio_irq;
+    wire spi0_irq, spi1_irq, i2c_irq, gpio_irq, trans_irq;
     
     // Interrupt mapping
     assign user_irq[0] = spi0_irq;
-    assign user_irq[1] = spi1_irq;
-    assign user_irq[2] = i2c_irq | gpio_irq;  // OR I2C and GPIO interrupts
+    assign user_irq[1] = spi1_irq | i2c_irq;  // OR SPI1 and I2C interrupts
+    assign user_irq[2] = gpio_irq | trans_irq;  // OR GPIO and translator interrupts
 
     // Main peripheral integration
     multi_periph_top periph_top (
@@ -97,7 +104,16 @@ module multi_periph_wb_wrapper (
         .gpio_in(gpio_in),
         .gpio_out(gpio_out),
         .gpio_oe(gpio_oe),
-        .gpio_irq(gpio_irq)
+        .gpio_irq(gpio_irq),
+        
+        // Language Translator
+        .trans_ext_data_out(trans_ext_data_out),
+        .trans_ext_data_in(trans_ext_data_in),
+        .trans_ext_valid_out(trans_ext_valid_out),
+        .trans_ext_valid_in(trans_ext_valid_in),
+        .trans_ext_ready_out(trans_ext_ready_out),
+        .trans_ext_ready_in(trans_ext_ready_in),
+        .trans_irq(trans_irq)
     );
 
 endmodule

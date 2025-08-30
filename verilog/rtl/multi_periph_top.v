@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 `default_nettype none
 
 module multi_periph_top (
@@ -42,27 +41,38 @@ module multi_periph_top (
     input  wire [1:0]  gpio_in,
     output wire [1:0]  gpio_out,
     output wire [1:0]  gpio_oe,
-    output wire        gpio_irq
+    output wire        gpio_irq,
+    
+    // Language Translator interface
+    output wire [7:0]  trans_ext_data_out,
+    input  wire [7:0]  trans_ext_data_in,
+    output wire        trans_ext_valid_out,
+    input  wire        trans_ext_valid_in,
+    output wire        trans_ext_ready_out,
+    input  wire        trans_ext_ready_in,
+    output wire        trans_irq
 );
 
     // Address decode
-    wire spi0_sel, spi1_sel, i2c_sel, gpio_sel;
-    wire [31:0] spi0_dat_o, spi1_dat_o, i2c_dat_o, gpio_dat_o;
-    wire spi0_ack_o, spi1_ack_o, i2c_ack_o, gpio_ack_o;
+    wire spi0_sel, spi1_sel, i2c_sel, gpio_sel, trans_sel;
+    wire [31:0] spi0_dat_o, spi1_dat_o, i2c_dat_o, gpio_dat_o, trans_dat_o;
+    wire spi0_ack_o, spi1_ack_o, i2c_ack_o, gpio_ack_o, trans_ack_o;
     
     // Address decoding
-    assign spi0_sel = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300000);  // 0x3000_0000 - 0x3000_00FF
-    assign spi1_sel = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300001);  // 0x3000_0100 - 0x3000_01FF
-    assign i2c_sel  = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300010);  // 0x3000_1000 - 0x3000_10FF
-    assign gpio_sel = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300020);  // 0x3000_2000 - 0x3000_20FF
+    assign spi0_sel  = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300000);  // 0x3000_0000 - 0x3000_00FF
+    assign spi1_sel  = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300001);  // 0x3000_0100 - 0x3000_01FF
+    assign i2c_sel   = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300010);  // 0x3000_1000 - 0x3000_10FF
+    assign gpio_sel  = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300020);  // 0x3000_2000 - 0x3000_20FF
+    assign trans_sel = wb_cyc_i && wb_stb_i && (wb_adr_i[31:8] == 24'h300030);  // 0x3000_3000 - 0x3000_30FF
     
     // Output muxing
-    assign wb_dat_o = spi0_sel ? spi0_dat_o :
-                      spi1_sel ? spi1_dat_o :
-                      i2c_sel  ? i2c_dat_o  :
-                      gpio_sel ? gpio_dat_o : 32'h00000000;
+    assign wb_dat_o = spi0_sel  ? spi0_dat_o :
+                      spi1_sel  ? spi1_dat_o :
+                      i2c_sel   ? i2c_dat_o  :
+                      gpio_sel  ? gpio_dat_o :
+                      trans_sel ? trans_dat_o : 32'h00000000;
                       
-    assign wb_ack_o = spi0_ack_o | spi1_ack_o | i2c_ack_o | gpio_ack_o;
+    assign wb_ack_o = spi0_ack_o | spi1_ack_o | i2c_ack_o | gpio_ack_o | trans_ack_o;
 
     // SPI Master 0
     CF_SPI_WB #(
@@ -163,6 +173,37 @@ module multi_periph_top (
             gpio_ack_reg <= 1'b0;
     end
     assign gpio_ack_o = gpio_ack_reg;
+
+    // Language Translator (Small version)
+    wire trans_we = wb_we_i && wb_cyc_i && wb_stb_i && trans_sel;
+    
+    language_translator_small trans_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .bus_we(trans_we),
+        .bus_addr(wb_adr_i[7:0]),
+        .bus_wdata(wb_dat_i),
+        .bus_rdata(trans_dat_o),
+        .ext_data_out(trans_ext_data_out),
+        .ext_data_in(trans_ext_data_in),
+        .ext_valid_out(trans_ext_valid_out),
+        .ext_valid_in(trans_ext_valid_in),
+        .ext_ready_out(trans_ext_ready_out),
+        .ext_ready_in(trans_ext_ready_in),
+        .irq(trans_irq)
+    );
+    
+    // Translator ACK generation
+    reg trans_ack_reg;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            trans_ack_reg <= 1'b0;
+        else if (wb_cyc_i && wb_stb_i && trans_sel && ~trans_ack_reg)
+            trans_ack_reg <= 1'b1;
+        else
+            trans_ack_reg <= 1'b0;
+    end
+    assign trans_ack_o = trans_ack_reg;
 
 endmodule
 

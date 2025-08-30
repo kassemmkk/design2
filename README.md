@@ -18,6 +18,12 @@ This project integrates a custom user project into the Caravel SoC with the foll
    - GPIO Controller: `0x3000_2000` - `0x3000_20FF`
    - Supports edge-detect interrupts for both GPIO lines
 
+4. **Real-Time Language Translator** at base address `0x3000_3000`
+   - Language Translator: `0x3000_3000` - `0x3000_30FF`
+   - Supports 10 languages with buffered I/O
+   - External interface for translation services
+   - Interrupt generation on translation completion
+
 ### Implementation Plan
 
 1. **RTL Development**
@@ -34,12 +40,13 @@ This project integrates a custom user project into the Caravel SoC with the foll
    0x3000_0100 - 0x3000_01FF: SPI Master 1  
    0x3000_1000 - 0x3000_10FF: I2C Controller
    0x3000_2000 - 0x3000_20FF: GPIO Controller (2 lines)
+   0x3000_3000 - 0x3000_30FF: Language Translator
    ```
 
 3. **Interrupt Mapping**
    - `user_irq[0]`: SPI Master 0 interrupts
-   - `user_irq[1]`: SPI Master 1 interrupts  
-   - `user_irq[2]`: I2C Controller and GPIO edge-detect interrupts (OR'd)
+   - `user_irq[1]`: SPI Master 1 and I2C Controller interrupts (OR'd)
+   - `user_irq[2]`: GPIO edge-detect and Language Translator interrupts (OR'd)
 
 4. **Verification**
    - Create cocotb-based testbenches for each peripheral

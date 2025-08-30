@@ -10,6 +10,7 @@ This document describes the register map for the multi-peripheral user project i
 | SPI Master 1 | 0x3000_0100 | 256 bytes | Second SPI master controller |
 | I2C Controller | 0x3000_1000 | 256 bytes | I2C master controller |
 | GPIO Controller | 0x3000_2000 | 256 bytes | 2-line GPIO with edge detection |
+| Language Translator | 0x3000_3000 | 256 bytes | Real-time language translator |
 
 ## SPI Master Registers (CF_SPI_WB)
 
@@ -123,6 +124,70 @@ Both SPI masters have identical register maps at their respective base addresses
 | 0 | MASK0 | GPIO line 0 interrupt mask (1=enabled) |
 | 1 | MASK1 | GPIO line 1 interrupt mask (1=enabled) |
 
+## Language Translator Registers
+
+| Offset | Name | Access | Reset | Description |
+|--------|------|--------|-------|-------------|
+| 0x00 | CONTROL | RW | 0x00 | Control register |
+| 0x04 | STATUS | R | 0x00 | Status register |
+| 0x08 | SRC_LANG | RW | 0x01 | Source language code |
+| 0x0C | DST_LANG | RW | 0x02 | Destination language code |
+| 0x10 | INPUT_DATA | W | 0x00 | Input data buffer (write) |
+| 0x14 | OUTPUT_DATA | R | 0x00 | Output data buffer (read) |
+| 0x18 | INPUT_LEN | RW | 0x0000 | Input text length |
+| 0x1C | OUTPUT_LEN | R | 0x0000 | Output text length |
+| 0x20 | IRQ_MASK | RW | 0x00 | Interrupt mask |
+| 0x24 | IRQ_STATUS | R | 0x00 | Interrupt status |
+| 0x28 | IRQ_CLEAR | W | 0x00 | Interrupt clear (W1C) |
+| 0x2C | BUFFER_CTRL | RW | 0x00 | Buffer control |
+
+### Language Translator Control Register (CONTROL)
+| Bit | Name | Description |
+|-----|------|-------------|
+| 0 | START | Start translation (self-clearing) |
+| 1 | RESET_BUF | Reset buffers |
+| 2 | ENABLE | Enable translator |
+
+### Language Translator Status Register (STATUS)
+| Bit | Name | Description |
+|-----|------|-------------|
+| 15 | ERROR | Translation error |
+| 14 | DONE | Translation complete |
+| 13 | BUSY | Translation in progress |
+| 11 | IN_FULL | Input buffer full |
+| 10 | IN_EMPTY | Input buffer empty |
+| 9 | OUT_FULL | Output buffer full |
+| 8 | OUT_EMPTY | Output buffer empty |
+| 7:5 | STATE | Current state machine state |
+
+### Language Codes
+| Code | Language |
+|------|----------|
+| 0x01 | English |
+| 0x02 | Spanish |
+| 0x03 | French |
+| 0x04 | German |
+| 0x05 | Italian |
+| 0x06 | Portuguese |
+| 0x07 | Chinese |
+| 0x08 | Japanese |
+| 0x09 | Korean |
+| 0x0A | Arabic |
+
+### Language Translator Interrupt Mask Register (IRQ_MASK)
+| Bit | Name | Description |
+|-----|------|-------------|
+| 0 | TRANS_DONE | Translation complete interrupt mask |
+| 1 | TRANS_ERROR | Translation error interrupt mask |
+| 2 | BUFFER_FULL | Buffer full interrupt mask |
+
+### Language Translator Interrupt Status Register (IRQ_STATUS)
+| Bit | Name | Description |
+|-----|------|-------------|
+| 0 | TRANS_DONE | Translation complete interrupt status |
+| 1 | TRANS_ERROR | Translation error interrupt status |
+| 2 | BUFFER_FULL | Buffer full interrupt status |
+
 ## Interrupt Mapping
 
 The peripheral interrupts are mapped to Caravel's user_irq signals:
@@ -131,7 +196,7 @@ The peripheral interrupts are mapped to Caravel's user_irq signals:
 |----------|--------|-------------|
 | user_irq[0] | SPI0 | SPI Master 0 interrupts (OR of all SPI0 interrupt sources) |
 | user_irq[1] | SPI1 + I2C | SPI Master 1 and I2C interrupts (OR combined) |
-| user_irq[2] | GPIO | GPIO edge detection interrupts (OR of both GPIO lines) |
+| user_irq[2] | GPIO + Translator | GPIO edge detection and language translator interrupts (OR combined) |
 
 ## Access Notes
 

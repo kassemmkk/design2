@@ -126,11 +126,19 @@ multi_periph_wb_wrapper mprj (
     // GPIO - mapped to io_in[18:17], io_out[18:17]
     .gpio_in(io_in[18:17]),
     .gpio_out(gpio_out_internal),
-    .gpio_oe(gpio_oe_internal)
+    .gpio_oe(gpio_oe_internal),
+    
+    // Language Translator external interface - mapped to logic analyzer for now
+    .trans_ext_data_out(la_data_out[7:0]),
+    .trans_ext_data_in(la_data_in[7:0]),
+    .trans_ext_valid_out(la_data_out[8]),
+    .trans_ext_valid_in(la_data_in[8]),
+    .trans_ext_ready_out(la_data_out[9]),
+    .trans_ext_ready_in(la_data_in[9])
 );
 
-// Unused logic analyzer signals
-assign la_data_out = 128'h0;
+// Logic analyzer signals - used for translator interface
+assign la_data_out[127:10] = 118'h0;  // Unused upper bits
 
 // Configure unused I/O as inputs
 assign io_out[6:0] = 7'h0;
